@@ -3,6 +3,7 @@
 import { BaseProvider, type IRequestArguments } from '@trustwallet/web3-provider-core';
 import type INimiqProvider from './types/NimiqProvider';
 import type { INimiqProviderConfig } from './types/NimiqProvider';
+import { RPCServer } from './RPCServer';
 
 export interface SignatureResult {
   publicKey: string,
@@ -43,10 +44,29 @@ export class NimiqProvider
 {
   static NETWORK = 'nimiq';
 
+  static WALLET_METHODS = new Set([
+    'listAccounts',
+    'sign',
+    'sendBasicTransaction',
+    'sendBasicTransactionWithData',
+    'sendNewStakerTransaction',
+    'sendStakeTransaction',
+    'sendSetActiveStakeTransaction',
+    'sendUpdateStakerTransaction',
+    'sendRetireStakeTransaction',
+    'sendRemoveStakeTransaction',
+  ]);
+
   #accounts: string[] | undefined;
+  #rpcUrl: string | undefined;
+  #rpc: RPCServer | undefined;
 
   constructor(config?: INimiqProviderConfig) {
     super();
+    if (config?.rpc || config?.rpcUrl) {
+      this.#rpcUrl = config.rpc || config.rpcUrl!;
+      this.#rpc = new RPCServer(this.#rpcUrl);
+    }
   }
 
   async connect() {
@@ -200,6 +220,35 @@ export class NimiqProvider
   }
 
   // TODO: Add other transaction creation types
+
+  async request<T>(args: IRequestArguments): Promise<T> {
+    if (NimiqProvider.WALLET_METHODS.has(args.method)) {
+      return this.#internalRequest<T>(args);
+    }
+
+    if (!this.#rpc) {
+      throw new Error(`No RPC URL configured. Call setRPCUrl() or pass rpcUrl in the constructor to use method "${args.method}".`);
+    }
+
+    return this.#rpc.call<T>({
+      jsonrpc: '2.0',
+      method: args.method,
+      params: args.params,
+    });
+  }
+
+  setRPCUrl(rpcUrl: string) {
+    this.#rpcUrl = rpcUrl;
+    this.#rpc = new RPCServer(this.#rpcUrl);
+  }
+
+  getRPC(): RPCServer | undefined {
+    return this.#rpc;
+  }
+
+  setRPC(rpc: RPCServer) {
+    this.#rpc = rpc;
+  }
 
   /**
    * Call request handler directly

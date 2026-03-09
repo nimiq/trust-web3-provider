@@ -26,7 +26,7 @@
     "@trustwallet/web3-provider-solana": "workspace:*",
     "@trustwallet/web3-provider-ton": "workspace:*",
     "@trustwallet/web3-provider-bitcoin": "workspace:*",
-    "@trustwallet/web3-provider-nimiq": "workspace:*",
+    "@nimiq/web3-provider-nimiq": "workspace:*",
     "core-js": "^3.38.1",
     "uuid": "9.0.1"
   },

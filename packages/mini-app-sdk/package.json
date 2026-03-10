@@ -1,0 +1,33 @@
+{
+  "name": "@nimiq/mini-app-sdk",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.es.js",
+  "types": "dist/types/index.d.ts",
+  "author": "The Nimiq Development Team <info@nimiq.com>",
+  "exports": {
+    ".": {
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs.js",
+      "types": "./dist/types/index.d.ts"
+    },
+    "./provider": {
+      "import": "./dist/provider.es.js",
+      "require": "./dist/provider.cjs.js",
+      "types": "./dist/types/provider.d.ts"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build:clean": "rm -rf dist .build",
+    "build:types": "tsc",
+    "build:source": "bun build:clean; rollup --config ./rollup.config.js; bun run build:types"
+  },
+  "dependencies": {
+    "@nimiq/web3-provider-nimiq": "workspace:*"
+  }
+}

@@ -33,6 +33,10 @@ wallet to connect with decentralized applications.
 - Solana - _Wallet Standard fully compatible_ [Docs](/packages/solana/README.md)
 - Ethereum _EIP-1193_ [Docs](/packages/ethereum/README.md)
 
+## SDKs
+
+- Nimiq Mini App SDK [Docs](/packages/mini-app-sdk/README.md)
+
 # Useful links
 
 [Contributing](/docs/CONTRIBUTING.md)

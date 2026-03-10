@@ -26,7 +26,7 @@
     "@trustwallet/web3-provider-aptos": "workspace:*",
     "@trustwallet/web3-provider-ton": "workspace:*",
     "@trustwallet/web3-provider-bitcoin": "workspace:*",
-    "@trustwallet/web3-provider-nimiq": "workspace:*",
+    "@nimiq/web3-provider-nimiq": "workspace:*",
     "rollup-plugin-polyfill-node": "0.13.0"
   },
   "devDependencies": {}

@@ -151,6 +151,11 @@ export class NimiqProvider
     });
   }
 
+  /**
+   * Create a new staker with the given delegation and stake amount.
+   * @param delegation Address of the validator to delegate to, e.g. 'NQ07 0000 0000 0000 0000 0000 0000 0000 0000'
+   * @param value Amount in Lunas (1 NIM = 1e5 Lunas)
+   */
   sendNewStakerTransaction(tx: {
     delegation: string,
     value: number,
@@ -163,6 +168,10 @@ export class NimiqProvider
     });
   }
 
+  /**
+   * Add stake to an existing staker
+   * @param value Amount in Lunas (1 NIM = 1e5 Lunas)
+   */
   sendStakeTransaction(tx: {
     value: number,
     fee?: number,
@@ -174,6 +183,10 @@ export class NimiqProvider
     });
   }
 
+  /**
+   * Set the active stake balance for an existing staker
+   * @param newActiveBalance New active stake balance in Lunas (1 NIM = 1e5 Lunas)
+   */
   sendSetActiveStakeTransaction(tx: {
     newActiveBalance: number,
     fee?: number,
@@ -185,6 +198,11 @@ export class NimiqProvider
     });
   }
 
+  /**
+   * Update the delegation for an existing staker
+   * @param newDelegation Address of the new validator to delegate to, e.g. 'NQ07 0000 0000 0000 0000 0000 0000 0000 0000'
+   * @param reactivateAllStake Automatically reactivates their stake after the reporting window time when executing this transaction. If false, the user needs to manually reactivate their stake after the reporting window time by sending a SetActiveStakeTransaction with the desired active stake balance.
+   */
   sendUpdateStakerTransaction(tx: {
     newDelegation: string,
     reactivateAllStake?: boolean,
@@ -197,6 +215,10 @@ export class NimiqProvider
     });
   }
 
+  /**
+   * Retire stake
+   * @param retireStake Amount of stake to retire in Lunas (1 NIM = 1e5 Lunas)
+   */
   sendRetireStakeTransaction(tx: {
     retireStake: number,
     fee?: number,
@@ -208,6 +230,10 @@ export class NimiqProvider
     });
   }
 
+  /**
+   * Remove (unstake) retired stake
+   * @param value Amount of retired stake to remove in Lunas (1 NIM = 1e5 Lunas)
+   */
   sendRemoveStakeTransaction(tx: {
     value: number,
     fee?: number,

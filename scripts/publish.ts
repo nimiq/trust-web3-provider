@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
-import { allowedPackages } from './packages';
+import { getAllowedPackageDirectories } from './packages';
 
 /**
  * Executes publish to npm
@@ -12,7 +12,7 @@ const directories = fs
   .readdirSync(subpackagesDir, { withFileTypes: true })
   .filter((dirent) => dirent.isDirectory())
   .map((dirent) => dirent.name)
-  .filter((name) => allowedPackages.includes(name));
+  .filter((name) => getAllowedPackageDirectories().includes(name));
 
 directories.forEach((directory) => {
   const dirPath = path.join(subpackagesDir, directory);

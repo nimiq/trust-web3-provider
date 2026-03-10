@@ -1,12 +1,15 @@
 {
-  "name": "@trustwallet/web3-provider-nimiq",
+  "name": "@nimiq/web3-provider-nimiq",
   "version": "4.0.0",
   "type": "module",
   "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
   "unpkg": "dist/index.umd.js",
   "types": "dist/types/index.d.ts",
-  "author": "Trust <support@trustwallet.com>",
+  "contributors": [
+    "Trust <support@trustwallet.com>",
+    "The Nimiq Development Team <info@nimiq.com>"
+  ],
   "license": "MIT",
   "sideEffects": false,
   "files": [

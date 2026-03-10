@@ -178,3 +178,5 @@ android/app/build/*
 android/lib/build/*
 android/.gradle
 local.properties
+
+**/.build

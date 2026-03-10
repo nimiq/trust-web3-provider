@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync, exec } from 'child_process';
-import { allowedPackages } from './packages';
+import { getAllowedPackageDirectories, getLinkCommand } from './packages';
 
 const subpackagesDir = path.resolve(__dirname, '../packages');
 
@@ -9,9 +9,7 @@ const directories = fs
   .readdirSync(subpackagesDir, { withFileTypes: true })
   .filter((dirent) => dirent.isDirectory())
   .map((dirent) => dirent.name)
-  .filter((name) => allowedPackages.includes(name));
-
-let command = `npm link `;
+  .filter((name) => getAllowedPackageDirectories().includes(name));
 
 Promise.all(
   directories.map((directory) => {
@@ -31,10 +29,9 @@ Promise.all(
         2000,
       );
       console.log(`Built ${directory}`);
-      command += `@trustwallet/web3-provider-${directory} `;
     } catch (error) {
       console.error(`Failed to build ${directory}`);
       console.error(error);
     }
   }),
-).then(() => console.warn(`\n\nUse the packages like this: \n\n${command}\n`));
+).then(() => console.warn(`\n\nUse the packages like this: \n\n${getLinkCommand()}\n`));

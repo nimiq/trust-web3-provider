@@ -714,3 +714,22 @@ test('Ethereum Provider → Mobile Adapter → permissions attaches address → 
     }),
   );
 });
+
+test('Ethereum Provider → Mobile Adapter → wallet_getPermissions forwards to the internal handler', async () => {
+  const handler = jest.fn((_params: IHandlerParams) => Promise.resolve([]));
+
+  new Web3Provider({
+    strategy: AdapterStrategy.PROMISES,
+    handler,
+  }).registerProvider(ethereum);
+
+  await ethereum.request<string[]>({
+    method: 'wallet_getPermissions',
+  });
+
+  expect(handler).toHaveBeenCalledWith(
+    expect.objectContaining({
+      name: 'wallet_getPermissions',
+    }),
+  );
+});

@@ -69,6 +69,11 @@ export class MobileAdapter {
           method: 'wallet_requestPermissions',
           params: args.params,
         });
+      case 'wallet_getPermissions':
+        return this.provider.internalRequest({
+          method: 'wallet_getPermissions',
+          params: args.params,
+        });
       case 'eth_requestAccounts':
         return this.provider.internalRequest({
           method: 'requestAccounts',

@@ -15,6 +15,8 @@ describe('mini-app-sdk packaging', () => {
     const indexTypes = readFileSync(join(distDir, 'index.d.ts'), 'utf8');
 
     expect(indexTypes).toContain('InitOptions');
+    expect(indexTypes).toContain('NimiqPayHostContext');
+    expect(indexTypes).toContain('getHostLanguage');
     expect(indexTypes).not.toContain("from '@nimiq/web3-provider-nimiq'");
     expect(indexTypes).not.toContain("from '@trustwallet/web3-provider-core'");
   });

@@ -1,33 +1,52 @@
 {
   "name": "@nimiq/mini-app-sdk",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "type": "module",
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.es.js",
-  "types": "dist/types/index.d.ts",
+  "description": "SDK for building Nimiq Mini Apps",
+  "license": "MIT",
   "author": "The Nimiq Development Team <info@nimiq.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nimiq/trust-web3-provider/tree/nimiq",
+    "directory": "packages/mini-app-sdk"
+  },
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.es.js",
-      "require": "./dist/index.cjs.js",
-      "types": "./dist/types/index.d.ts"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./provider": {
-      "import": "./dist/provider.es.js",
-      "require": "./dist/provider.cjs.js",
-      "types": "./dist/types/provider.d.ts"
+      "import": {
+        "types": "./dist/provider.d.ts",
+        "default": "./dist/provider.js"
+      },
+      "require": {
+        "types": "./dist/provider.d.cts",
+        "default": "./dist/provider.cjs"
+      }
     }
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "globals.ts"
+  ],
   "files": [
     "dist"
   ],
   "scripts": {
     "build:clean": "rm -rf dist .build",
-    "build:types": "tsc",
-    "build:source": "bun build:clean; rollup --config ./rollup.config.js; bun run build:types"
+    "build:source": "bun run build:clean && tsup"
   },
-  "dependencies": {
-    "@nimiq/web3-provider-nimiq": "workspace:*"
+  "devDependencies": {
+    "@nimiq/web3-provider-nimiq": "workspace:*",
+    "tsup": "^8.5.1"
   }
 }

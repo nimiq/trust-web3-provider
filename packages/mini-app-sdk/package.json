@@ -1,6 +1,6 @@
 {
   "name": "@nimiq/mini-app-sdk",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "type": "module",
   "description": "SDK for building Nimiq Mini Apps",
   "license": "MIT",

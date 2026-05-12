@@ -1,6 +1,6 @@
 # Nimiq Mini App SDK
 
-TypeScript helpers for Nimiq mini apps.
+TypeScript helpers for Nimiq Mini Apps.
 
 This package is intentionally small:
 
@@ -16,7 +16,7 @@ npm install @nimiq/mini-app-sdk
 
 ## Usage
 
-If your mini app wants to wait until the host app injects the provider, use `init()`:
+If your Mini App wants to wait until the host app injects the provider, use `init()`:
 
 ```ts
 import { init } from '@nimiq/mini-app-sdk'
@@ -50,7 +50,7 @@ Both are typed as `NimiqProvider`.
 
 ## Host context (user language)
 
-Nimiq Pay seeds the user's selected language into every mini app before the
+Nimiq Pay seeds the user's selected language into every Mini App before the
 page script runs. Read it via `getHostLanguage()` (typed helper) or directly
 from `window.nimiqPay.language`. Use it to match the host locale so users
 don't hit English-only UI when they've chosen another language in Nimiq Pay.
@@ -62,7 +62,31 @@ import { getHostLanguage } from '@nimiq/mini-app-sdk'
 const locale = getHostLanguage() ?? navigator.language.split('-')[0] ?? 'en'
 ```
 
-The value is static for the lifetime of a mini-app session; when the host
-language changes, the mini app picks it up the next time it's opened. Always
-fall back to `navigator.language` for mini apps that can also run outside
+The value is static for the lifetime of a Mini App session; when the host
+language changes, the Mini App picks it up the next time it's opened. Always
+fall back to `navigator.language` for Mini Apps that can also run outside
 Nimiq Pay (standalone browser dev, etc.).
+
+## Device identifier
+
+For features that need a stable per-device handle (leaderboards, anti-spam,
+save slots) request a pseudonymous device identifier. The first call per
+origin prompts the user with the `reason` you provide; later calls resolve
+silently.
+
+```ts
+import { requestDeviceIdentifier } from '@nimiq/mini-app-sdk'
+
+try {
+  const id = await requestDeviceIdentifier({ reason: 'Leaderboard ranking' })
+  // 64-char hex SHA-256, stable for this Mini App on this device
+} catch (err) {
+  // user denied, reason was empty, or not running inside Nimiq Pay
+}
+```
+
+The identifier is derived from a host-side device ID hashed with the Mini
+App's origin, so it cannot be correlated across Mini Apps. It is stable
+across Nimiq Pay reinstalls and across different user accounts on the same
+device — it identifies the device, not the user. Do not use it as a user
+identity for authentication; use it for device-scoped state.

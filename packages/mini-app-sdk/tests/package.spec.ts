@@ -17,6 +17,8 @@ describe('mini-app-sdk packaging', () => {
     expect(indexTypes).toContain('InitOptions');
     expect(indexTypes).toContain('NimiqPayHostContext');
     expect(indexTypes).toContain('getHostLanguage');
+    expect(indexTypes).toContain('getHostFiat');
+    expect(indexTypes).toContain('Fiat');
     expect(indexTypes).not.toContain("from '@nimiq/web3-provider-nimiq'");
     expect(indexTypes).not.toContain("from '@trustwallet/web3-provider-core'");
   });

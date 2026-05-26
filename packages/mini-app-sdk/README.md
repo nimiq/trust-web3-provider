@@ -48,24 +48,28 @@ The injected provider is available in both places:
 
 Both are typed as `NimiqProvider`.
 
-## Host context (user language)
+## Host context
 
-Nimiq Pay seeds the user's selected language into every Mini App before the
-page script runs. Read it via `getHostLanguage()` (typed helper) or directly
-from `window.nimiqPay.language`. Use it to match the host locale so users
-don't hit English-only UI when they've chosen another language in Nimiq Pay.
+Nimiq Pay seeds the user's selected language and fiat currency into every
+Mini App before the page script runs. Read them via the typed helpers
+(`getHostLanguage()`, `getHostFiat()`) or directly from `window.nimiqPay`.
+Use them to match the host locale and currency so users don't hit
+English-only UI or unexpected price formats.
 
 ```ts
-import { getHostLanguage } from '@nimiq/mini-app-sdk'
+import { getHostLanguage, getHostFiat, Fiat } from '@nimiq/mini-app-sdk'
 
 // ISO 639-1 code, e.g. 'en' | 'de' | 'es' | 'fr' | 'pt'
 const locale = getHostLanguage() ?? navigator.language.split('-')[0] ?? 'en'
+
+// ISO 4217 fiat code from the `Fiat` enum, e.g. Fiat.USD, Fiat.EUR
+const fiat = getHostFiat() ?? Fiat.USD
 ```
 
-The value is static for the lifetime of a Mini App session; when the host
-language changes, the Mini App picks it up the next time it's opened. Always
-fall back to `navigator.language` for Mini Apps that can also run outside
-Nimiq Pay (standalone browser dev, etc.).
+These values are static for the lifetime of a Mini App session; when the
+user changes them in Nimiq Pay, the Mini App picks them up the next time
+it's opened. Always provide a fallback for Mini Apps that can also run
+outside Nimiq Pay (standalone browser dev, etc.).
 
 ## Device identifier
 

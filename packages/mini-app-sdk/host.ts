@@ -1,3 +1,5 @@
+import type { Fiat } from './types'
+
 /**
  * ISO 639-1 language code selected by the user in Nimiq Pay, or `undefined`
  * when not running inside Nimiq Pay. Seeded synchronously before the Mini
@@ -5,6 +7,15 @@
  */
 export function getHostLanguage(): string | undefined {
   return typeof window === 'undefined' ? undefined : window.nimiqPay?.language
+}
+
+/**
+ * Fiat currency selected by the user in Nimiq Pay, or `undefined`
+ * when not running inside Nimiq Pay. Seeded synchronously before the Mini
+ * App's page script runs, so safe to read during module init.
+ */
+export function getHostFiat(): Fiat | undefined {
+  return typeof window === 'undefined' ? undefined : window.nimiqPay?.userFiat
 }
 
 /**

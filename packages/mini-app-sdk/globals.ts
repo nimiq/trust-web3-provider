@@ -1,8 +1,10 @@
 import type { NimiqProvider } from '@nimiq/web3-provider-nimiq'
+import type { Fiat } from './types'
 
 /** Read-only host context injected by Nimiq Pay before a Mini App loads. */
 export interface NimiqPayHostContext {
   readonly language?: string
+  readonly userFiat?: Fiat
   /**
    * Request a pseudonymous, per-origin device identifier (64-char hex SHA-256).
    * Prompts the user on first call per origin; subsequent calls auto-resolve.

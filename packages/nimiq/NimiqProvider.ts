@@ -57,6 +57,11 @@ export class NimiqProvider
     'sendUpdateStakerTransaction',
     'sendRetireStakeTransaction',
     'sendRemoveStakeTransaction',
+    'sendNewHtlcTransaction',
+    'sendRedeemRegularHtlcTransaction',
+    'sendRedeemTimeoutHtlcTransaction',
+    'sendRedeemEarlyHtlcTransaction',
+    'signRedeemEarlyHtlcTransaction',
   ]);
 
   #accounts: string[] | undefined;

@@ -334,7 +334,7 @@ export class NimiqProvider
     htlcRecipientSignature: string,
     value: number,
     fee?: number,
-    validityStartHeight?: number,
+    validityStartHeight: number,
   }): Promise<string | ErrorResponse> {
     return super.request<string | ErrorResponse>({
       method: 'sendRedeemEarlyHtlcTransaction',
@@ -353,7 +353,7 @@ export class NimiqProvider
     recipient?: string,
     value: number,
     fee?: number,
-    validityStartHeight?: number,
+    validityStartHeight: number,
   }): Promise<string | ErrorResponse> {
     return super.request<string | ErrorResponse>({
       method: 'signRedeemEarlyHtlcTransaction',

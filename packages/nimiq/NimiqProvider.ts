@@ -55,6 +55,11 @@ export class NimiqProvider
     'sendUpdateStakerTransaction',
     'sendRetireStakeTransaction',
     'sendRemoveStakeTransaction',
+    'sendNewHtlcTransaction',
+    'sendRedeemRegularHtlcTransaction',
+    'sendRedeemTimeoutHtlcTransaction',
+    'sendRedeemEarlyHtlcTransaction',
+    'signRedeemEarlyHtlcTransaction',
   ]);
 
   #accounts: string[] | undefined;
@@ -241,6 +246,121 @@ export class NimiqProvider
   }): Promise<string | ErrorResponse> {
     return this.#internalRequest<string | ErrorResponse>({
       method: 'sendRemoveStakeTransaction',
+      params: tx,
+    });
+  }
+
+  /**
+   * Create a Hash Time Locked Contract (HTLC)
+   * @param htlcSender The address of the sender of the HTLC (can redeem after timelock expiration) - uses own address if not provided
+   * @param htlcRecipient The address of the recipient of the HTLC (can redeem before timelock expiration)
+   * @param hashRoot The hash root of the contract which the recipient needs to fulfill with the hash preimage in the redemption proof
+   * @param hashCount The number of times the preimage gets hashed to fulfill the hash root
+   * @param hashAlgorithm Which hashing algorithm the HTLC uses
+   * @param timeoutMs The time, in Unix time with millisecond precision, when the contract expires
+   * @param value Amount to lock in the contract, in Lunas (1 NIM = 1e5 Lunas)
+   */
+  sendNewHtlcTransaction(tx: {
+    htlcSender?: string,
+    htlcRecipient: string,
+    hashRoot: string,
+    hashCount: number,
+    hashAlgorithm: 'blake2b' | 'sha256' | 'sha512',
+    timeout: number,
+    value: number,
+    fee?: number,
+    validityStartHeight?: number,
+  }): Promise<string | ErrorResponse> {
+    return this.#internalRequest<string | ErrorResponse>({
+      method: 'sendNewHtlcTransaction',
+      params: tx,
+    });
+  }
+
+  /**
+   * Redeem a HTLC before the timeout by providing the hash preimage (the signer must be the htlcRecipient of the HTLC)
+   * @param contractAddress The address of the HTLC contract to redeem from
+   * @param recipient The address of the recipient of the transaction - uses own address if not provided
+   * @param preImage The redemption proof preimage
+   * @param hashRoot The hash root the preimage hashes to
+   * @param hashCount The number of times the preimage is hashed to create the hash root
+   * @param hashAlgorithm Which hashing algorithm the HTLC uses
+   * @param value The amount to redeem from the HTLC
+   */
+  sendRedeemRegularHtlcTransaction(tx: {
+    contractAddress: string,
+    recipient?: string,
+    preImage: string,
+    hashRoot: string,
+    hashCount: number,
+    hashAlgorithm: 'blake2b' | 'sha256' | 'sha512',
+    value: number,
+    fee?: number,
+    validityStartHeight?: number,
+  }): Promise<string | ErrorResponse> {
+    return this.#internalRequest<string | ErrorResponse>({
+      method: 'sendRedeemRegularHtlcTransaction',
+      params: tx,
+    });
+  }
+
+  /**
+   * Redeem a HTLC after the timeout (the signer must be the htlcSender of the HTLC)
+   * @param contractAddress The address of the HTLC contract to redeem from
+   * @param recipient The address of the recipient of the transaction - uses own address if not provided
+   * @param value The amount to redeem from the HTLC
+   */
+  sendRedeemTimeoutHtlcTransaction(tx: {
+    contractAddress: string,
+    recipient?: string,
+    value: number,
+    fee?: number,
+    validityStartHeight?: number,
+  }): Promise<string | ErrorResponse> {
+    return this.#internalRequest<string | ErrorResponse>({
+      method: 'sendRedeemTimeoutHtlcTransaction',
+      params: tx,
+    });
+  }
+
+  /**
+   * Redeem a HTLC before the timeout without providing the preimage, in cooperation between the htlcSender and htlcRecipient
+   * @param contractAddress The address of the HTLC contract to redeem from
+   * @param recipient The address of the recipient of the transaction - uses own address if not provided
+   * @param htlcSenderSignature The signature of the htlcSender - create it with `signRedeemEarlyHtlcTransaction`
+   * @param htlcRecipientSignature The signature of the htlcRecipient - create it with `signRedeemEarlyHtlcTransaction`
+   * @param value The amount to redeem from the HTLC
+   */
+  sendRedeemEarlyHtlcTransaction(tx: {
+    contractAddress: string,
+    recipient?: string,
+    htlcSenderSignature: string,
+    htlcRecipientSignature: string,
+    value: number,
+    fee?: number,
+    validityStartHeight: number,
+  }): Promise<string | ErrorResponse> {
+    return this.#internalRequest<string | ErrorResponse>({
+      method: 'sendRedeemEarlyHtlcTransaction',
+      params: tx,
+    });
+  }
+
+  /**
+   * Create a signature to use with `sendRedeemEarlyHtlcTransaction`
+   * @param contractAddress The address of the HTLC contract to redeem from
+   * @param recipient The address of the recipient of the transaction - uses own address if not provided
+   * @param value The amount to redeem from the HTLC
+   */
+  signRedeemEarlyHtlcTransaction(tx: {
+    contractAddress: string,
+    recipient?: string,
+    value: number,
+    fee?: number,
+    validityStartHeight: number,
+  }): Promise<string | ErrorResponse> {
+    return this.#internalRequest<string | ErrorResponse>({
+      method: 'signRedeemEarlyHtlcTransaction',
       params: tx,
     });
   }

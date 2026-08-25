@@ -48,6 +48,36 @@ The injected provider is available in both places:
 
 Both are typed as `NimiqProvider`.
 
+## Wallet errors
+
+Wallet methods resolve with their success value and reject with a
+`NimiqProviderError` when the host returns an error. They never resolve with an
+`ErrorResponse`.
+
+```ts
+import { init, NimiqProviderError } from '@nimiq/mini-app-sdk'
+
+const nimiq = await init()
+
+try {
+  const accounts = await nimiq.listAccounts() // string[]
+} catch (error) {
+  if (NimiqProviderError.is(error)) {
+    console.error(error.type, error.message)
+  } else {
+    throw error
+  }
+}
+```
+
+`NimiqProviderError.is()` works across package and host bundle boundaries. The
+`type` value is supplied by the host and can be used for programmatic handling;
+`message` contains its human-readable description.
+
+Code written for older SDK versions must replace resolved-value checks such as
+`'error' in result` with `try`/`catch`. The raw `ErrorResponse` type remains
+exported for host integrations, but Mini Apps do not need to handle it.
+
 ## Host context
 
 Nimiq Pay seeds the user's selected language and fiat currency into every

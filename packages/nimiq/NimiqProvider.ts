@@ -4,6 +4,7 @@ import { BaseProvider, type IRequestArguments } from '@trustwallet/web3-provider
 import type INimiqProvider from './types/NimiqProvider';
 import type { INimiqProviderConfig } from './types/NimiqProvider';
 import { RPCServer } from './RPCServer';
+import { NimiqProviderError } from './exceptions/NimiqProviderError';
 
 export interface SignatureResult {
   publicKey: string,
@@ -31,11 +32,16 @@ export interface TransactionInfo {
   networkId: number,
 }
 
+/** Raw error returned by a wallet handler before the provider converts it. */
 export interface ErrorResponse {
   error: {
     type: string,
     message: string,
-  }
+  },
+}
+
+function isErrorResponse(response: unknown): response is ErrorResponse {
+  return !!response && typeof response === 'object' && 'error' in response;
 }
 
 export class NimiqProvider
@@ -86,14 +92,11 @@ export class NimiqProvider
     return this.#accounts !== undefined;
   }
 
-  async listAccounts(): Promise<string[] | ErrorResponse> {
+  async listAccounts(): Promise<string[]> {
     if (this.#accounts) {
       return Promise.resolve(this.#accounts);
     }
-    const accounts = await this.#internalRequest<string[] | ErrorResponse>({ method: 'listAccounts' });
-    if ('error' in accounts) {
-      return accounts;
-    }
+    const accounts = await this.#internalRequest<string[]>({ method: 'listAccounts' });
     if (!this.#accounts) {
       this.emit('connect');
     }
@@ -101,7 +104,7 @@ export class NimiqProvider
     return accounts;
   }
 
-  sign(message: string | { message: string, isHex?: boolean }): Promise<SignatureResult | ErrorResponse> {
+  sign(message: string | { message: string, isHex?: boolean }): Promise<SignatureResult> {
     return this.#internalRequest<SignatureResult>({
       method: 'sign',
       params: typeof message === 'string' ? { message } : message,
@@ -126,8 +129,8 @@ export class NimiqProvider
     value: number,
     fee?: number,
     validityStartHeight?: number,
-  }): Promise<string | ErrorResponse> {
-    return this.#internalRequest<string | ErrorResponse>({
+  }): Promise<string> {
+    return this.#internalRequest<string>({
       method: 'sendBasicTransaction',
       params: tx,
     });
@@ -144,8 +147,8 @@ export class NimiqProvider
     fee?: number,
     data: string,
     validityStartHeight?: number,
-  }): Promise<string | ErrorResponse> {
-    return this.#internalRequest<string | ErrorResponse>({
+  }): Promise<string> {
+    return this.#internalRequest<string>({
       method: 'sendBasicTransactionWithData',
       params: tx,
     });
@@ -161,8 +164,8 @@ export class NimiqProvider
     value: number,
     fee?: number,
     validityStartHeight?: number,
-  }): Promise<string | ErrorResponse> {
-    return this.#internalRequest<string | ErrorResponse>({
+  }): Promise<string> {
+    return this.#internalRequest<string>({
       method: 'sendNewStakerTransaction',
       params: tx,
     });
@@ -176,8 +179,8 @@ export class NimiqProvider
     value: number,
     fee?: number,
     validityStartHeight?: number,
-  }): Promise<string | ErrorResponse> {
-    return this.#internalRequest<string | ErrorResponse>({
+  }): Promise<string> {
+    return this.#internalRequest<string>({
       method: 'sendStakeTransaction',
       params: tx,
     });
@@ -191,8 +194,8 @@ export class NimiqProvider
     newActiveBalance: number,
     fee?: number,
     validityStartHeight?: number,
-  }): Promise<string | ErrorResponse> {
-    return this.#internalRequest<string | ErrorResponse>({
+  }): Promise<string> {
+    return this.#internalRequest<string>({
       method: 'sendSetActiveStakeTransaction',
       params: tx,
     });
@@ -208,8 +211,8 @@ export class NimiqProvider
     reactivateAllStake?: boolean,
     fee?: number,
     validityStartHeight?: number,
-  }): Promise<string | ErrorResponse> {
-    return this.#internalRequest<string | ErrorResponse>({
+  }): Promise<string> {
+    return this.#internalRequest<string>({
       method: 'sendUpdateStakerTransaction',
       params: tx,
     });
@@ -223,8 +226,8 @@ export class NimiqProvider
     retireStake: number,
     fee?: number,
     validityStartHeight?: number,
-  }): Promise<string | ErrorResponse> {
-    return this.#internalRequest<string | ErrorResponse>({
+  }): Promise<string> {
+    return this.#internalRequest<string>({
       method: 'sendRetireStakeTransaction',
       params: tx,
     });
@@ -238,8 +241,8 @@ export class NimiqProvider
     value: number,
     fee?: number,
     validityStartHeight?: number,
-  }): Promise<string | ErrorResponse> {
-    return this.#internalRequest<string | ErrorResponse>({
+  }): Promise<string> {
+    return this.#internalRequest<string>({
       method: 'sendRemoveStakeTransaction',
       params: tx,
     });
@@ -281,7 +284,11 @@ export class NimiqProvider
    * @param args
    * @returns
    */
-  #internalRequest<T>(args: IRequestArguments): Promise<T> {
-    return super.request<T>(args);
+  async #internalRequest<T>(args: IRequestArguments): Promise<T> {
+    const response = await super.request<T | ErrorResponse>(args);
+    if (isErrorResponse(response)) {
+      throw new NimiqProviderError(response.error.type, response.error.message);
+    }
+    return response;
   }
 }

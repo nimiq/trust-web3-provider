@@ -31,6 +31,18 @@ describe('mini-app-sdk packaging', () => {
     expect(providerTypes).not.toContain("from '@trustwallet/web3-provider-core'");
   });
 
+  test('runtime bundles export NimiqProviderError', async () => {
+    const sdk = await import(join(distDir, 'index.js'));
+    const provider = await import(join(distDir, 'provider.js'));
+
+    expect(typeof sdk.NimiqProviderError).toBe('function');
+
+    const error = new sdk.NimiqProviderError('USER_REJECTED', 'User rejected the request');
+
+    expect(provider.NimiqProviderError).toBe(sdk.NimiqProviderError);
+    expect(sdk.NimiqProviderError.is(error)).toBe(true);
+  });
+
   test('clean rebuild recreates declaration files', () => {
     execSync('bun run build:source', { cwd: packageDir, stdio: 'pipe' });
 

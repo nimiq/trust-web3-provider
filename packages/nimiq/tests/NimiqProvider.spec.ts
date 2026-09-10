@@ -25,6 +25,11 @@ const walletCalls: Array<[string, (provider: NimiqProvider) => Promise<unknown>]
   ['sendRemoveStakeTransaction', (provider) => provider.sendRemoveStakeTransaction({ value: 1 })],
 ];
 
+const statusCalls: Array<[string, (provider: NimiqProvider) => Promise<unknown>]> = [
+  ['isConsensusEstablished', (provider) => provider.isConsensusEstablished()],
+  ['getBlockNumber', (provider) => provider.getBlockNumber()],
+];
+
 function registerErrorHandler(provider: NimiqProvider): void {
   new Web3Provider({
     strategy: AdapterStrategy.PROMISES,
@@ -38,6 +43,24 @@ function registerErrorHandler(provider: NimiqProvider): void {
 }
 
 describe('wallet errors', () => {
+  test('preserves resolved errors without connecting or caching failures', async () => {
+    const provider = new NimiqProvider();
+    registerErrorHandler(provider);
+    await expect(provider.listAccounts()).resolves.toEqual({
+      error: { type: 'USER_REJECTED', message: 'User rejected the request' },
+    });
+    expect(provider.connected).toBe(false);
+    new Web3Provider({ strategy: 'PROMISES', handler: () => Promise.resolve([account]) }).registerProvider(provider);
+    await expect(provider.listAccounts()).resolves.toEqual([account]);
+    expect(provider.connected).toBe(true);
+  });
+
+  test('preserves callback rejection objects', async () => {
+    const provider = new NimiqProvider();
+    const error = { code: 4001, message: 'Permission denied' };
+    const bridge = new Web3Provider({ strategy: 'CALLBACK', handler: ({ id }) => bridge.sendError(id!, error) }).registerProvider(provider);
+    await expect(provider.listAccounts()).rejects.toBe(error);
+  });
   test('NimiqProviderError identifies errors across bundle boundaries', () => {
     expect(NimiqProviderError.is({
       name: 'NimiqProviderError',
@@ -45,36 +68,96 @@ describe('wallet errors', () => {
       message: 'User rejected the request',
     })).toBe(true);
     expect(NimiqProviderError.is(new Error('Other error'))).toBe(false);
+    expect(NimiqProviderError.is({
+      name: 'NimiqProviderError',
+      type: 'USER_REJECTED',
+      message: 'User rejected the request',
+      code: '4001',
+    })).toBe(false);
   });
 
-  test.each(walletCalls)('%s rejects structured host errors', async (_name, call) => {
+  test.each(walletCalls)('%s preserves resolved host errors', async (_name, call) => {
     const provider = new NimiqProvider();
     registerErrorHandler(provider);
 
-    await expect(call(provider)).rejects.toMatchObject({
-      name: 'NimiqProviderError',
-      type: 'USER_REJECTED',
-      message: 'User rejected the request',
+    await expect(call(provider)).resolves.toEqual({
+      error: { type: 'USER_REJECTED', message: 'User rejected the request' },
     });
   });
 
-  test('request rejects structured host errors for wallet methods', async () => {
+  test('request preserves resolved host errors for wallet methods', async () => {
     registerErrorHandler(Nimiq);
 
-    await expect(Nimiq.request({ method: 'listAccounts' })).rejects.toMatchObject({
-      name: 'NimiqProviderError',
-      type: 'USER_REJECTED',
-      message: 'User rejected the request',
+    await expect(Nimiq.request({ method: 'listAccounts' })).resolves.toEqual({
+      error: { type: 'USER_REJECTED', message: 'User rejected the request' },
+    });
+  });
+
+  test('nim_requestAccounts preserves rejected host errors', async () => {
+    const provider = new NimiqProvider();
+    const bridge = new Web3Provider({
+      strategy: AdapterStrategy.CALLBACK,
+      handler: ({ id, name }) => {
+        expect(name).toBe('listAccounts');
+        bridge.sendError(id!, { code: 4001, message: 'Permission denied' });
+      },
+    }).registerProvider(provider);
+
+    await expect(provider.request({ method: 'nim_requestAccounts' })).rejects.toMatchObject({
+      code: 4001,
+      message: 'Permission denied',
     });
   });
 });
 
-// Direct methods
-test('Nimiq Awesome test', async () => {
+describe('non-wallet status errors', () => {
+  test('nim_isConsensusEstablished preserves native errors', async () => {
+    const hostError = { code: -32603, message: 'Host error' };
+    const provider = new NimiqProvider();
+    const bridge = new Web3Provider({
+      strategy: AdapterStrategy.CALLBACK,
+      handler: ({ id, name }) => {
+        expect(name).toBe('isConsensusEstablished');
+        bridge.sendError(id!, hostError);
+      },
+    }).registerProvider(provider);
+
+    await expect(provider.request({ method: 'nim_isConsensusEstablished' })).rejects.toBe(hostError);
+  });
+
+  test.each(statusCalls)('%s preserves callback errors', async (_name, call) => {
+    const hostError = { code: -32603, message: 'Host error' };
+    const provider = new NimiqProvider();
+    const bridge = new Web3Provider({
+      strategy: AdapterStrategy.CALLBACK,
+      handler: ({ id }) => bridge.sendError(id!, hostError),
+    }).registerProvider(provider);
+
+    await expect(call(provider)).rejects.toBe(hostError);
+  });
+
+  test.each(statusCalls)('%s preserves resolved legacy-shaped values', async (_name, call) => {
+    const response = {
+      error: {
+        type: 'INTERNAL_ERROR',
+        message: 'Host error',
+      },
+    };
+    const provider = new NimiqProvider();
+    new Web3Provider({
+      strategy: AdapterStrategy.PROMISES,
+      handler: () => Promise.resolve(response),
+    }).registerProvider(provider);
+
+    await expect(call(provider)).resolves.toBe(response);
+  });
+});
+
+test('nim_requestAccounts forwards normalized wallet method', async () => {
   new Web3Provider({
     strategy: AdapterStrategy.PROMISES,
     handler: (request) => {
-      expect(request.name).toBe('requestAccounts'); // Normalized method name
+      expect(request.name).toBe('listAccounts');
       return Promise.resolve([account])
     },
   }).registerProvider(Nimiq);

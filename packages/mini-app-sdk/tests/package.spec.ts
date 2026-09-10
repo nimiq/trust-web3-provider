@@ -1,12 +1,14 @@
 import { beforeAll, describe, expect, test } from 'bun:test';
-import { execSync } from 'child_process';
+import { execFileSync, execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
+import { createRequire } from 'module';
 import { join } from 'path';
 
 const packageDir = join(import.meta.dir, '..');
 const distDir = join(packageDir, 'dist');
 
 beforeAll(() => {
+  execSync('bun run build:source', { cwd: join(packageDir, '../nimiq'), stdio: 'pipe' });
   execSync('bun run build:source', { cwd: packageDir, stdio: 'pipe' });
 });
 
@@ -34,6 +36,9 @@ describe('mini-app-sdk packaging', () => {
   test('runtime bundles export NimiqProviderError', async () => {
     const sdk = await import(join(distDir, 'index.js'));
     const provider = await import(join(distDir, 'provider.js'));
+    const require = createRequire(import.meta.url);
+    const sdkCjs = require(join(distDir, 'index.cjs'));
+    const providerCjs = require(join(distDir, 'provider.cjs'));
 
     expect(typeof sdk.NimiqProviderError).toBe('function');
 
@@ -41,6 +46,18 @@ describe('mini-app-sdk packaging', () => {
 
     expect(provider.NimiqProviderError).toBe(sdk.NimiqProviderError);
     expect(sdk.NimiqProviderError.is(error)).toBe(true);
+    expect(providerCjs.NimiqProviderError).toBe(sdkCjs.NimiqProviderError);
+  });
+
+  test('Nimiq package loads in Node ESM and CommonJS', () => {
+    const output = execFileSync('node', ['--input-type=module', '--eval', `
+      import { createRequire } from 'node:module';
+      import { NimiqProvider } from '@nimiq/web3-provider-nimiq';
+      const commonjs = createRequire(import.meta.url)('@nimiq/web3-provider-nimiq');
+      console.log(typeof NimiqProvider, typeof commonjs.NimiqProvider);
+    `], { cwd: join(packageDir, '../nimiq'), encoding: 'utf8' });
+
+    expect(output.trim()).toBe('function function');
   });
 
   test('clean rebuild recreates declaration files', () => {

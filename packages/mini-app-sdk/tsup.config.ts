@@ -7,5 +7,7 @@ export default defineConfig({
   sourcemap: true,
   minify: true,
   clean: true,
+  // Keep one error constructor across the SDK and provider entrypoints.
+  splitting: true,
   external: [],
 })

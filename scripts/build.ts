@@ -20,7 +20,8 @@ directories.sort((a, b) => {
   return a.localeCompare(b);
 });
 
-['core', ...directories.filter((a) => a !== 'core')].forEach((directory) => {
+// The SDK bundles Nimiq, so build both dependencies before their consumers.
+['core', 'nimiq', ...directories.filter((name) => name !== 'core' && name !== 'nimiq')].forEach((directory) => {
   const dirPath = path.join(subpackagesDir, directory);
 
   console.log(`Building ${directory}`);
@@ -31,5 +32,6 @@ directories.sort((a, b) => {
   } catch (error) {
     console.error(`Failed to build ${directory}`);
     console.error(error);
+    throw error;
   }
 });

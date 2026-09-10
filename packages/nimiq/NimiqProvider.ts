@@ -4,7 +4,6 @@ import { BaseProvider, type IRequestArguments } from '@trustwallet/web3-provider
 import type INimiqProvider from './types/NimiqProvider';
 import type { INimiqProviderConfig } from './types/NimiqProvider';
 import { RPCServer } from './RPCServer';
-import { NimiqProviderError } from './exceptions/NimiqProviderError';
 
 export interface SignatureResult {
   publicKey: string,
@@ -32,7 +31,7 @@ export interface TransactionInfo {
   networkId: number,
 }
 
-/** Raw error returned by a wallet handler before the provider converts it. */
+/** Legacy error returned by a wallet handler. */
 export interface ErrorResponse {
   error: {
     type: string,
@@ -40,10 +39,7 @@ export interface ErrorResponse {
   },
 }
 
-function isErrorResponse(response: unknown): response is ErrorResponse {
-  return !!response && typeof response === 'object' && 'error' in response;
-}
-
+// Keep host errors unchanged for older SDKs; the new SDK normalizes them in init().
 export class NimiqProvider
   extends BaseProvider
   implements INimiqProvider
@@ -92,11 +88,13 @@ export class NimiqProvider
     return this.#accounts !== undefined;
   }
 
-  async listAccounts(): Promise<string[]> {
+  async listAccounts(): Promise<string[] | ErrorResponse> {
     if (this.#accounts) {
-      return Promise.resolve(this.#accounts);
+      return this.#accounts;
     }
-    const accounts = await this.#internalRequest<string[]>({ method: 'listAccounts' });
+    const accounts = await super.request<string[] | ErrorResponse>({ method: 'listAccounts' });
+    // A resolved wallet error must not mark the provider as connected or enter the cache.
+    if (!Array.isArray(accounts)) return accounts;
     if (!this.#accounts) {
       this.emit('connect');
     }
@@ -104,19 +102,19 @@ export class NimiqProvider
     return accounts;
   }
 
-  sign(message: string | { message: string, isHex?: boolean }): Promise<SignatureResult> {
-    return this.#internalRequest<SignatureResult>({
+  sign(message: string | { message: string, isHex?: boolean }): Promise<SignatureResult | ErrorResponse> {
+    return super.request<SignatureResult | ErrorResponse>({
       method: 'sign',
       params: typeof message === 'string' ? { message } : message,
     });
   }
 
   isConsensusEstablished(): Promise<boolean> {
-    return this.#internalRequest<boolean>({ method: 'isConsensusEstablished' });
+    return super.request<boolean>({ method: 'isConsensusEstablished' });
   }
 
   getBlockNumber(): Promise<number> {
-    return this.#internalRequest<number>({ method: 'getBlockNumber' });
+    return super.request<number>({ method: 'getBlockNumber' });
   }
 
   /**
@@ -129,8 +127,8 @@ export class NimiqProvider
     value: number,
     fee?: number,
     validityStartHeight?: number,
-  }): Promise<string> {
-    return this.#internalRequest<string>({
+  }): Promise<string | ErrorResponse> {
+    return super.request<string | ErrorResponse>({
       method: 'sendBasicTransaction',
       params: tx,
     });
@@ -147,8 +145,8 @@ export class NimiqProvider
     fee?: number,
     data: string,
     validityStartHeight?: number,
-  }): Promise<string> {
-    return this.#internalRequest<string>({
+  }): Promise<string | ErrorResponse> {
+    return super.request<string | ErrorResponse>({
       method: 'sendBasicTransactionWithData',
       params: tx,
     });
@@ -164,8 +162,8 @@ export class NimiqProvider
     value: number,
     fee?: number,
     validityStartHeight?: number,
-  }): Promise<string> {
-    return this.#internalRequest<string>({
+  }): Promise<string | ErrorResponse> {
+    return super.request<string | ErrorResponse>({
       method: 'sendNewStakerTransaction',
       params: tx,
     });
@@ -179,8 +177,8 @@ export class NimiqProvider
     value: number,
     fee?: number,
     validityStartHeight?: number,
-  }): Promise<string> {
-    return this.#internalRequest<string>({
+  }): Promise<string | ErrorResponse> {
+    return super.request<string | ErrorResponse>({
       method: 'sendStakeTransaction',
       params: tx,
     });
@@ -194,8 +192,8 @@ export class NimiqProvider
     newActiveBalance: number,
     fee?: number,
     validityStartHeight?: number,
-  }): Promise<string> {
-    return this.#internalRequest<string>({
+  }): Promise<string | ErrorResponse> {
+    return super.request<string | ErrorResponse>({
       method: 'sendSetActiveStakeTransaction',
       params: tx,
     });
@@ -211,8 +209,8 @@ export class NimiqProvider
     reactivateAllStake?: boolean,
     fee?: number,
     validityStartHeight?: number,
-  }): Promise<string> {
-    return this.#internalRequest<string>({
+  }): Promise<string | ErrorResponse> {
+    return super.request<string | ErrorResponse>({
       method: 'sendUpdateStakerTransaction',
       params: tx,
     });
@@ -226,8 +224,8 @@ export class NimiqProvider
     retireStake: number,
     fee?: number,
     validityStartHeight?: number,
-  }): Promise<string> {
-    return this.#internalRequest<string>({
+  }): Promise<string | ErrorResponse> {
+    return super.request<string | ErrorResponse>({
       method: 'sendRetireStakeTransaction',
       params: tx,
     });
@@ -241,8 +239,8 @@ export class NimiqProvider
     value: number,
     fee?: number,
     validityStartHeight?: number,
-  }): Promise<string> {
-    return this.#internalRequest<string>({
+  }): Promise<string | ErrorResponse> {
+    return super.request<string | ErrorResponse>({
       method: 'sendRemoveStakeTransaction',
       params: tx,
     });
@@ -251,8 +249,16 @@ export class NimiqProvider
   // TODO: Add other transaction creation types
 
   async request<T>(args: IRequestArguments): Promise<T> {
-    if (NimiqProvider.WALLET_METHODS.has(args.method)) {
-      return this.#internalRequest<T>(args);
+    const walletMethod = args.method === 'nim_requestAccounts' ? 'listAccounts' : args.method;
+    if (NimiqProvider.WALLET_METHODS.has(walletMethod)) {
+      return super.request<T>({
+        ...args,
+        method: walletMethod,
+      });
+    }
+
+    if (args.method === 'nim_isConsensusEstablished') {
+      return super.request<T>({ ...args, method: 'isConsensusEstablished' });
     }
 
     if (!this.#rpc) {
@@ -277,18 +283,5 @@ export class NimiqProvider
 
   setRPC(rpc: RPCServer) {
     this.#rpc = rpc;
-  }
-
-  /**
-   * Call request handler directly
-   * @param args
-   * @returns
-   */
-  async #internalRequest<T>(args: IRequestArguments): Promise<T> {
-    const response = await super.request<T | ErrorResponse>(args);
-    if (isErrorResponse(response)) {
-      throw new NimiqProviderError(response.error.type, response.error.message);
-    }
-    return response;
   }
 }

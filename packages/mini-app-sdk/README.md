@@ -94,3 +94,34 @@ App's origin, so it cannot be correlated across Mini Apps. It is stable
 across Nimiq Pay reinstalls and across different user accounts on the same
 device — it identifies the device, not the user. Do not use it as a user
 identity for authentication; use it for device-scoped state.
+
+## Known issues
+
+### `sendNewStakerTransaction` fails with "expected instance of Address"
+
+Reported 2026-09-14. Reproduced consistently on a real device via "Load a local Mini App" in
+Nimiq Pay.
+
+**Call made** (conforms to the documented signature, `delegation` is a plain user-friendly
+address string, no other optional params passed):
+
+```ts
+const nimiq = await init() // @nimiq/mini-app-sdk@0.1.0
+const txHash = await nimiq.sendNewStakerTransaction({
+  delegation: 'NQ40 FC4D HAT6 9N1H P52H P4FX QL8P CE6Y 10VT',
+  value: 10000000, // 100 NIM in Luna
+})
+```
+
+**Observed behavior**: the native "Confirm Transaction" screen renders correctly (Recipient:
+Staking Contract, Action: Créer un staker, Validator: NQ40...), but the error
+`An unknown error occurred: expected instance of Address` appears directly on that confirmation
+screen, before the user even confirms — the transaction can never be signed. This points to the
+delegation string not being converted to an `Address` instance somewhere in the native
+staking-transaction construction path (Android/iOS), since the Mini App only ever sends the plain
+string documented by this SDK's own type signature (`delegation: string`).
+
+No GitHub Issues/Discussions are enabled on this repo, so this is filed as a documentation-only PR
+to keep a record — happy to move this to a proper issue/discussion channel if one gets enabled, or
+to help reproduce with more detail if a maintainer points to where the native staking transaction
+is built.

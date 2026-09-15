@@ -2,10 +2,18 @@
   "name": "@nimiq/web3-provider-nimiq",
   "version": "4.0.0",
   "type": "module",
-  "main": "dist/index.cjs.js",
+  "main": "dist/index.cjs",
   "module": "dist/index.es.js",
   "unpkg": "dist/index.umd.js",
   "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.es.js"
+    }
+  },
   "contributors": [
     "Trust <support@trustwallet.com>",
     "The Nimiq Development Team <info@nimiq.com>"
@@ -18,7 +26,7 @@
   "scripts": {
     "build:clean": "rm -rf dist",
     "build:types": "tsc",
-    "build:source": "bun build:clean; rollup --config ./rollup.config.js; bun run build:types",
+    "build:source": "bun build:clean && rollup --config ./rollup.config.js && bun run build:types",
     "dev": "bun build ./index.ts --outdir ./dist --watch"
   },
   "dependencies": { },

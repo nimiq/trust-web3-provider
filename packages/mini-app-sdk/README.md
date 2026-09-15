@@ -25,7 +25,7 @@ const nimiq = await init()
 const accounts = await nimiq.listAccounts()
 ```
 
-After that import, `window.nimiq` is typed as `NimiqProvider`.
+Use the provider returned by `init()` for typed wallet errors.
 
 ## Configuration
 
@@ -41,12 +41,43 @@ const nimiq = await init(options)
 
 ## Provider Access
 
-The injected provider is available in both places:
+`await init()` returns a typed wrapper around the injected provider. It shares
+the host's account state and events, and repeated calls return the same wrapper.
+`window.nimiq` keeps its original methods and error behavior for older SDKs.
 
-- `const nimiq = await init()`
-- `window.nimiq`
+## Wallet errors
 
-Both are typed as `NimiqProvider`.
+Wallet methods on the provider returned by `init()` resolve with their success value and reject with a
+`NimiqProviderError` when the host returns an error. They never resolve with an
+`ErrorResponse`.
+
+```ts
+import { init, NimiqProviderError } from '@nimiq/mini-app-sdk'
+
+const nimiq = await init()
+
+try {
+  const accounts = await nimiq.listAccounts() // string[]
+} catch (error) {
+  if (NimiqProviderError.is(error)) {
+    console.error(error.type, error.message)
+  } else {
+    throw error
+  }
+}
+```
+
+`NimiqProviderError.is()` works across package and host bundle boundaries.
+Nimiq Pay supplies `type`, `message`, and the original numeric RPC `code`.
+Older versions only supply `code` and `message`; the SDK maps known codes to
+error types and uses `UNKNOWN_ERROR` for unknown codes. It also accepts legacy
+resolved `{ error: { type, message } }` responses.
+
+When upgrading the SDK, use the provider returned by `init()` and replace
+`'error' in result` checks with `try`/`catch`. Mini Apps using an older SDK keep
+their existing behavior. The raw `ErrorResponse` type remains exported for
+host integrations. Non-wallet RPC and status methods keep their original
+results and errors.
 
 ## Host context
 

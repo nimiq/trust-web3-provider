@@ -44,7 +44,7 @@ describe('init', () => {
     await expect(result.request({ method: 'custom_rpc' })).rejects.toBe(rpcError);
   });
 
-  test.each(['listAccounts', 'nim_requestAccounts'])('normalizes rejected errors from request(%s)', async (method) => {
+  test.each(['listAccounts', 'nim_requestAccounts', 'getBalance'])('normalizes rejected errors from request(%s)', async (method) => {
     window.nimiq = {
       request: () => Promise.reject({ code: 4001, message: 'Permission denied' }),
     } as unknown as HostProvider;
@@ -192,8 +192,31 @@ describe('init', () => {
     await expect(provider.listAccounts()).rejects.toBe(error);
   });
 
+  test('returns numeric balances and normalizes explicit balance errors', async () => {
+    const provider = new HostProvider();
+    let response: number | { code: number, type: string, message: string } = 12_345_678;
+    const bridge = new Web3Provider({
+      strategy: 'CALLBACK',
+      handler: ({ id }) => typeof response === 'number'
+        ? bridge.sendResponse(id!, response)
+        : bridge.sendError(id!, response),
+    }).registerProvider(provider);
+    window.nimiq = provider;
+    const sdk = await init();
+
+    await expect(sdk.getBalance('NQ11 UNRELATED')).resolves.toBe(12_345_678);
+    response = { code: -32602, type: 'INVALID_REQUEST', message: 'A valid Nimiq address is required' };
+    await expect(sdk.getBalance('invalid')).rejects.toMatchObject({
+      name: 'NimiqProviderError',
+      code: -32602,
+      type: 'INVALID_REQUEST',
+      message: 'A valid Nimiq address is required',
+    });
+  });
+
   test.each([
     ['listAccounts', (p: NimiqProvider) => p.listAccounts()],
+    ['getBalance', (p: NimiqProvider) => p.getBalance('NQ11 UNRELATED')],
     ['sign', (p: NimiqProvider) => p.sign('hello')],
     ['sendBasicTransaction', (p: NimiqProvider) => p.sendBasicTransaction({ recipient: 'NQ00 ACCOUNT', value: 1 })],
     ['sendBasicTransactionWithData', (p: NimiqProvider) => p.sendBasicTransactionWithData({ recipient: 'NQ00 ACCOUNT', value: 1, data: 'hello' })],

@@ -2,6 +2,7 @@ import { NimiqProviderError, type NimiqProvider as HostProvider, type SignatureR
 
 export interface NimiqProvider extends HostProvider {
   listAccounts(): Promise<string[]>
+  getBalance(...args: Parameters<HostProvider['getBalance']>): Promise<number>
   sign(...args: Parameters<HostProvider['sign']>): Promise<SignatureResult>
   sendBasicTransaction(...args: Parameters<HostProvider['sendBasicTransaction']>): Promise<string>
   sendBasicTransactionWithData(...args: Parameters<HostProvider['sendBasicTransactionWithData']>): Promise<string>
@@ -20,6 +21,7 @@ export interface InitOptions {
 const providers = new WeakMap<HostProvider, NimiqProvider>()
 const WALLET_METHODS = new Set<string>([
   'listAccounts',
+  'getBalance',
   'sign',
   'sendBasicTransaction',
   'sendBasicTransactionWithData',

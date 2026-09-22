@@ -79,6 +79,25 @@ their existing behavior. The raw `ErrorResponse` type remains exported for
 host integrations. Non-wallet RPC and status methods keep their original
 results and errors.
 
+## Address balances
+
+`getBalance(address)` reads any valid Nimiq address on the network currently
+active in the host. It does not request access to the user's accounts.
+
+```ts
+const nimiq = await init()
+const balance = await nimiq.getBalance('NQ...')
+```
+
+The result is a number in luna, where 100,000 luna equals 1 NIM. A zero result
+is a successful lookup.
+
+Invalid addresses and network failures reject with `NimiqProviderError`, so use
+the same `try`/`catch` pattern as other wallet methods. Older hosts do not expose
+this method. Mini Apps that support older host versions can check
+`typeof window.nimiq?.getBalance === 'function'` before calling it and ask the
+user to update Nimiq Pay when it is unavailable.
+
 ## Host context
 
 Nimiq Pay seeds the user's selected language and fiat currency into every

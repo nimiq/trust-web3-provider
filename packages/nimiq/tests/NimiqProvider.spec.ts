@@ -14,6 +14,7 @@ afterEach(() => {
 
 const walletCalls: Array<[string, (provider: NimiqProvider) => Promise<unknown>]> = [
   ['listAccounts', (provider) => provider.listAccounts()],
+  ['getBalance', (provider) => provider.getBalance(account)],
   ['sign', (provider) => provider.sign('hello')],
   ['sendBasicTransaction', (provider) => provider.sendBasicTransaction({ recipient: account, value: 1 })],
   ['sendBasicTransactionWithData', (provider) => provider.sendBasicTransactionWithData({ recipient: account, value: 1, data: 'data' })],
@@ -24,6 +25,27 @@ const walletCalls: Array<[string, (provider: NimiqProvider) => Promise<unknown>]
   ['sendRetireStakeTransaction', (provider) => provider.sendRetireStakeTransaction({ retireStake: 1 })],
   ['sendRemoveStakeTransaction', (provider) => provider.sendRemoveStakeTransaction({ value: 1 })],
 ];
+
+describe('balance requests', () => {
+  test.each([
+    ['getBalance', (provider: NimiqProvider) => provider.getBalance(account), 12_345_678],
+    ['request(getBalance)', (provider: NimiqProvider) => provider.request<number>({ method: 'getBalance', params: { address: account } }), 0],
+  ])('%s uses the native bridge even when RPC is configured', async (_name, call, balance) => {
+    const provider = new NimiqProvider({ rpc: 'https://rpc.example' });
+    const requests: unknown[] = [];
+    new Web3Provider({
+      strategy: AdapterStrategy.PROMISES,
+      handler: (request) => {
+        requests.push(request);
+        return Promise.resolve(balance);
+      },
+    }).registerProvider(provider);
+
+    await expect(call(provider)).resolves.toBe(balance);
+    expect(requests).toHaveLength(1);
+    expect(requests[0]).toMatchObject({ name: 'getBalance', params: { address: account } });
+  });
+});
 
 const statusCalls: Array<[string, (provider: NimiqProvider) => Promise<unknown>]> = [
   ['isConsensusEstablished', (provider) => provider.isConsensusEstablished()],

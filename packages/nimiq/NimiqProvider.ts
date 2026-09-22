@@ -48,6 +48,7 @@ export class NimiqProvider
 
   static WALLET_METHODS = new Set([
     'listAccounts',
+    'getBalance',
     'sign',
     'sendBasicTransaction',
     'sendBasicTransactionWithData',
@@ -115,6 +116,17 @@ export class NimiqProvider
 
   getBlockNumber(): Promise<number> {
     return super.request<number>({ method: 'getBlockNumber' });
+  }
+
+  /**
+   * Get an address balance from the active host network.
+   * @returns Balance in luna (100,000 luna = 1 NIM)
+   */
+  getBalance(address: string): Promise<number | ErrorResponse> {
+    return super.request<number | ErrorResponse>({
+      method: 'getBalance',
+      params: { address },
+    });
   }
 
   /**

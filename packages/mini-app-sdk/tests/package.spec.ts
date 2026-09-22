@@ -29,6 +29,7 @@ describe('mini-app-sdk packaging', () => {
     const providerTypes = readFileSync(join(distDir, 'provider.d.ts'), 'utf8');
 
     expect(providerTypes).toContain('NimiqProvider');
+    expect(providerTypes).toContain('getBalance');
     expect(providerTypes).not.toContain("from '@nimiq/web3-provider-nimiq'");
     expect(providerTypes).not.toContain("from '@trustwallet/web3-provider-core'");
   });

@@ -10,6 +10,11 @@ export interface SignatureResult {
   signature: string,
 }
 
+export interface LightningPaymentResult {
+  hash: string,
+  swapId: string,
+}
+
 export interface TransactionInfo {
   hash: string,
   blockNumber: number,
@@ -52,6 +57,7 @@ export class NimiqProvider
     'sign',
     'sendBasicTransaction',
     'sendBasicTransactionWithData',
+    'payLightningInvoice',
     'sendNewStakerTransaction',
     'sendStakeTransaction',
     'sendSetActiveStakeTransaction',
@@ -126,6 +132,14 @@ export class NimiqProvider
     return super.request<number | ErrorResponse>({
       method: 'getBalance',
       params: { address },
+    });
+  }
+
+  /** Submit a self-custodial NIM or USDT to BTC Lightning payment. Success means the payment transaction was submitted. */
+  payLightningInvoice(request: { invoice: string }): Promise<LightningPaymentResult | ErrorResponse> {
+    return super.request<LightningPaymentResult | ErrorResponse>({
+      method: 'payLightningInvoice',
+      params: request,
     });
   }
 

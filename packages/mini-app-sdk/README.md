@@ -68,6 +68,7 @@ try {
 ```
 
 `NimiqProviderError.is()` works across package and host bundle boundaries.
+
 Nimiq Pay supplies `type`, `message`, and the original numeric RPC `code`.
 Older versions only supply `code` and `message`; the SDK maps known codes to
 error types and uses `UNKNOWN_ERROR` for unknown codes. It also accepts legacy
@@ -78,6 +79,16 @@ When upgrading the SDK, use the provider returned by `init()` and replace
 their existing behavior. The raw `ErrorResponse` type remains exported for
 host integrations. Non-wallet RPC and status methods keep their original
 results and errors.
+
+## Bitcoin Lightning payments
+
+```ts
+const { hash, swapId } = await nimiq.payLightningInvoice({ invoice: 'lnbc...' })
+```
+
+The host asks the user to allow invoice lookup, choose NIM or USDT, and approve a self-custodial swap to BTC Lightning. A successful result means the payment transaction was submitted; Lightning settlement may still be pending. Fixed-amount BOLT11 invoices and fixed-amount LNURLs are supported. The invoice must match the host network.
+
+Reusing an invoice rejects with `NimiqProviderError` type `DUPLICATE_PAYMENT`. `error.data` includes the known `hash` and `swapId` when the earlier attempt came from the same Mini App and wallet. An uncertain submission rejects with type `TRANSACTION_OUTCOME_UNKNOWN` and the same identifiers when known. Do not retry that invoice after an uncertain result.
 
 ## Address balances
 

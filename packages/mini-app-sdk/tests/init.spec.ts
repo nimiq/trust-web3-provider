@@ -192,6 +192,33 @@ describe('init', () => {
     await expect(provider.listAccounts()).rejects.toBe(error);
   });
 
+  test('returns Lightning submission identifiers and preserves duplicate details', async () => {
+    const provider = new HostProvider();
+    const submission = { hash: 'nim-hash', swapId: 'swap-id' };
+    let duplicate = false;
+    const bridge = new Web3Provider({
+      strategy: 'CALLBACK',
+      handler: ({ id, name, params }) => {
+        expect(name).toBe('payLightningInvoice');
+        expect(params).toEqual({ invoice: 'lnbc1test' });
+        if (duplicate)
+          bridge.sendError(id!, { code: -32602, type: 'DUPLICATE_PAYMENT', message: 'Already paid', data: submission });
+        else
+          bridge.sendResponse(id!, submission);
+      },
+    }).registerProvider(provider);
+    window.nimiq = provider;
+
+    const sdk = await init();
+    await expect(sdk.payLightningInvoice({ invoice: 'lnbc1test' })).resolves.toEqual(submission);
+    duplicate = true;
+    await expect(sdk.payLightningInvoice({ invoice: 'lnbc1test' })).rejects.toMatchObject({
+      name: 'NimiqProviderError',
+      type: 'DUPLICATE_PAYMENT',
+      data: submission,
+    });
+  });
+
   test('returns numeric balances and normalizes explicit balance errors', async () => {
     const provider = new HostProvider();
     let response: number | { code: number, type: string, message: string } = 12_345_678;
@@ -220,6 +247,7 @@ describe('init', () => {
     ['sign', (p: NimiqProvider) => p.sign('hello')],
     ['sendBasicTransaction', (p: NimiqProvider) => p.sendBasicTransaction({ recipient: 'NQ00 ACCOUNT', value: 1 })],
     ['sendBasicTransactionWithData', (p: NimiqProvider) => p.sendBasicTransactionWithData({ recipient: 'NQ00 ACCOUNT', value: 1, data: 'hello' })],
+    ['payLightningInvoice', (p: NimiqProvider) => p.payLightningInvoice({ invoice: 'lnbc1test' })],
     ['sendNewStakerTransaction', (p: NimiqProvider) => p.sendNewStakerTransaction({ delegation: 'NQ00 ACCOUNT', value: 1 })],
     ['sendStakeTransaction', (p: NimiqProvider) => p.sendStakeTransaction({ value: 1 })],
     ['sendSetActiveStakeTransaction', (p: NimiqProvider) => p.sendSetActiveStakeTransaction({ newActiveBalance: 1 })],

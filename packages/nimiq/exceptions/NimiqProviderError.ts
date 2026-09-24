@@ -38,12 +38,14 @@ function isCallbackError(error: unknown): error is CallbackError {
 export class NimiqProviderError extends Error {
   readonly type: string;
   readonly code?: number;
+  readonly data?: unknown;
 
-  constructor(type: string, message: string, code?: number) {
+  constructor(type: string, message: string, code?: number, data?: unknown) {
     super(message);
     this.name = 'NimiqProviderError';
     this.type = type;
     this.code = code;
+    this.data = data;
   }
 
   static is(error: unknown): error is NimiqProviderError {
@@ -55,7 +57,7 @@ export class NimiqProviderError extends Error {
 
   static fromLegacyResponse(response: unknown): NimiqProviderError | undefined {
     if (response && typeof response === 'object' && 'error' in response && isErrorDetails(response.error)) {
-      return new NimiqProviderError(response.error.type, response.error.message);
+      return new NimiqProviderError(response.error.type, response.error.message, undefined, 'data' in response.error ? response.error.data : undefined);
     }
 
     return undefined;
@@ -65,7 +67,7 @@ export class NimiqProviderError extends Error {
     if (error instanceof NimiqProviderError) return error;
 
     if (NimiqProviderError.is(error)) {
-      return new NimiqProviderError(error.type, error.message, error.code);
+      return new NimiqProviderError(error.type, error.message, error.code, error.data);
     }
 
     const legacyError = NimiqProviderError.fromLegacyResponse(error);
@@ -75,7 +77,7 @@ export class NimiqProviderError extends Error {
       const type = 'type' in error && typeof error.type === 'string'
         ? error.type
         : ERROR_TYPE_BY_CODE[error.code] || 'UNKNOWN_ERROR';
-      return new NimiqProviderError(type, error.message, error.code);
+      return new NimiqProviderError(type, error.message, error.code, 'data' in error ? error.data : undefined);
     }
 
     return undefined;

@@ -1,4 +1,4 @@
-import { NimiqProviderError, type NimiqProvider as HostProvider, type SignatureResult } from '@nimiq/web3-provider-nimiq'
+import { NimiqProviderError, type LightningPaymentResult, type NimiqProvider as HostProvider, type SignatureResult } from '@nimiq/web3-provider-nimiq'
 
 export interface NimiqProvider extends HostProvider {
   listAccounts(): Promise<string[]>
@@ -6,6 +6,7 @@ export interface NimiqProvider extends HostProvider {
   sign(...args: Parameters<HostProvider['sign']>): Promise<SignatureResult>
   sendBasicTransaction(...args: Parameters<HostProvider['sendBasicTransaction']>): Promise<string>
   sendBasicTransactionWithData(...args: Parameters<HostProvider['sendBasicTransactionWithData']>): Promise<string>
+  payLightningInvoice(...args: Parameters<HostProvider['payLightningInvoice']>): Promise<LightningPaymentResult>
   sendNewStakerTransaction(...args: Parameters<HostProvider['sendNewStakerTransaction']>): Promise<string>
   sendStakeTransaction(...args: Parameters<HostProvider['sendStakeTransaction']>): Promise<string>
   sendSetActiveStakeTransaction(...args: Parameters<HostProvider['sendSetActiveStakeTransaction']>): Promise<string>
@@ -25,6 +26,7 @@ const WALLET_METHODS = new Set<string>([
   'sign',
   'sendBasicTransaction',
   'sendBasicTransactionWithData',
+  'payLightningInvoice',
   'sendNewStakerTransaction',
   'sendStakeTransaction',
   'sendSetActiveStakeTransaction',

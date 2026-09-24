@@ -18,6 +18,7 @@ const walletCalls: Array<[string, (provider: NimiqProvider) => Promise<unknown>]
   ['sign', (provider) => provider.sign('hello')],
   ['sendBasicTransaction', (provider) => provider.sendBasicTransaction({ recipient: account, value: 1 })],
   ['sendBasicTransactionWithData', (provider) => provider.sendBasicTransactionWithData({ recipient: account, value: 1, data: 'data' })],
+  ['payLightningInvoice', (provider) => provider.payLightningInvoice({ invoice: 'lnbc1test' })],
   ['sendNewStakerTransaction', (provider) => provider.sendNewStakerTransaction({ delegation: account, value: 1 })],
   ['sendStakeTransaction', (provider) => provider.sendStakeTransaction({ value: 1 })],
   ['sendSetActiveStakeTransaction', (provider) => provider.sendSetActiveStakeTransaction({ newActiveBalance: 1 })],

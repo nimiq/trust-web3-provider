@@ -155,3 +155,32 @@ App's origin, so it cannot be correlated across Mini Apps. It is stable
 across Nimiq Pay reinstalls and across different user accounts on the same
 device — it identifies the device, not the user. Do not use it as a user
 identity for authentication; use it for device-scoped state.
+
+## Fullscreen
+
+Ask the user in your Mini App before each fullscreen request. Nimiq Pay does
+not show another approval prompt. Users can exit through the native button;
+Android Back also exits fullscreen. The current page, cookies, and history
+stay loaded when fullscreen changes.
+
+```ts
+import { requestFullscreen, exitFullscreen, getFullscreen, onFullscreenChange } from '@nimiq/mini-app-sdk'
+
+const stopWatching = onFullscreenChange((enabled) => {
+  console.log('Fullscreen:', enabled)
+})
+
+button.addEventListener('click', async () => {
+  if (window.confirm('Allow this Mini App to use fullscreen?'))
+    await requestFullscreen()
+})
+
+// Call exitFullscreen() to leave from your own UI.
+// Call getFullscreen() to refresh state after the app resumes.
+// Call stopWatching() when the UI is removed.
+```
+
+These APIs require a compatible Nimiq Pay host. The helpers reject when the
+host is unavailable; `onFullscreenChange` throws because it returns an
+unsubscribe function. Fullscreen also exits when the app backgrounds, the
+WebView hides or closes, or the Mini App navigates to another origin.

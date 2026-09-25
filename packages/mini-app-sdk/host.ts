@@ -32,3 +32,28 @@ export function requestDeviceIdentifier(options: { reason: string }): Promise<st
     return Promise.reject(new Error('requestDeviceIdentifier is unavailable. Are you running inside Nimiq Pay?'))
   return window.nimiqPay.requestDeviceIdentifier(options)
 }
+
+/** The Mini App must ask the user before each request. Nimiq Pay adds no prompt. */
+export function requestFullscreen(): Promise<void> {
+  if (typeof window === 'undefined' || !window.nimiqPay?.requestFullscreen)
+    return Promise.reject(new Error('requestFullscreen is unavailable. Are you running inside Nimiq Pay?'))
+  return window.nimiqPay.requestFullscreen()
+}
+
+export function exitFullscreen(): Promise<void> {
+  if (typeof window === 'undefined' || !window.nimiqPay?.exitFullscreen)
+    return Promise.reject(new Error('exitFullscreen is unavailable. Are you running inside Nimiq Pay?'))
+  return window.nimiqPay.exitFullscreen()
+}
+
+export function getFullscreen(): Promise<boolean> {
+  if (typeof window === 'undefined' || !window.nimiqPay?.getFullscreen)
+    return Promise.reject(new Error('getFullscreen is unavailable. Are you running inside Nimiq Pay?'))
+  return window.nimiqPay.getFullscreen()
+}
+
+export function onFullscreenChange(listener: (enabled: boolean) => void): () => void {
+  if (typeof window === 'undefined' || !window.nimiqPay?.onFullscreenChange)
+    throw new Error('onFullscreenChange is unavailable. Are you running inside Nimiq Pay?')
+  return window.nimiqPay.onFullscreenChange(listener)
+}

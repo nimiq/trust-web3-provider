@@ -5,6 +5,11 @@ import type { Fiat } from './types'
 export interface NimiqPayHostContext {
   readonly language?: string
   readonly userFiat?: Fiat
+  /** Enter native fullscreen. The Mini App must ask the user first. */
+  requestFullscreen: () => Promise<void>
+  exitFullscreen: () => Promise<void>
+  getFullscreen: () => Promise<boolean>
+  onFullscreenChange: (listener: (enabled: boolean) => void) => () => void
   /**
    * Request a pseudonymous, per-origin device identifier (64-char hex SHA-256).
    * Prompts the user on first call per origin; subsequent calls auto-resolve.

@@ -1,4 +1,4 @@
-import type { Fiat } from './types'
+import type { Fiat, Network } from './types'
 
 /**
  * ISO 639-1 language code selected by the user in Nimiq Pay, or `undefined`
@@ -16,6 +16,15 @@ export function getHostLanguage(): string | undefined {
  */
 export function getHostFiat(): Fiat | undefined {
   return typeof window === 'undefined' ? undefined : window.nimiqPay?.userFiat
+}
+
+/**
+ * Nimiq network Nimiq Pay is connected to, or `undefined` when not running
+ * inside Nimiq Pay or on a host version that predates this field. Seeded
+ * synchronously before the Mini App's page script runs.
+ */
+export function getHostNetwork(): Network | undefined {
+  return typeof window === 'undefined' ? undefined : window.nimiqPay?.network
 }
 
 /**

@@ -111,20 +111,24 @@ user to update Nimiq Pay when it is unavailable.
 
 ## Host context
 
-Nimiq Pay seeds the user's selected language and fiat currency into every
-Mini App before the page script runs. Read them via the typed helpers
-(`getHostLanguage()`, `getHostFiat()`) or directly from `window.nimiqPay`.
+Nimiq Pay seeds the user's selected language and fiat currency, plus the
+Nimiq network it runs on, into every Mini App before the page script runs.
+Read them via the typed helpers (`getHostLanguage()`, `getHostFiat()`,
+`getHostNetwork()`) or directly from `window.nimiqPay`.
 Use them to match the host locale and currency so users don't hit
 English-only UI or unexpected price formats.
 
 ```ts
-import { getHostLanguage, getHostFiat, Fiat } from '@nimiq/mini-app-sdk'
+import { getHostLanguage, getHostFiat, getHostNetwork, Fiat } from '@nimiq/mini-app-sdk'
 
 // ISO 639-1 code, e.g. 'en' | 'de' | 'es' | 'fr' | 'pt'
 const locale = getHostLanguage() ?? navigator.language.split('-')[0] ?? 'en'
 
 // ISO 4217 fiat code from the `Fiat` enum, e.g. Fiat.USD, Fiat.EUR
 const fiat = getHostFiat() ?? Fiat.USD
+
+// 'mainnet' | 'testnet'; undefined on older Nimiq Pay versions
+const network = getHostNetwork() ?? 'mainnet'
 ```
 
 These values are static for the lifetime of a Mini App session; when the

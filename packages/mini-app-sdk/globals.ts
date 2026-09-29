@@ -1,10 +1,11 @@
 import type { NimiqProvider } from '@nimiq/web3-provider-nimiq'
-import type { Fiat } from './types'
+import type { Fiat, Network } from './types'
 
 /** Read-only host context injected by Nimiq Pay before a Mini App loads. */
 export interface NimiqPayHostContext {
   readonly language?: string
   readonly userFiat?: Fiat
+  readonly network?: Network
   /** Enter native fullscreen. The Mini App must ask the user first. */
   requestFullscreen: () => Promise<void>
   exitFullscreen: () => Promise<void>

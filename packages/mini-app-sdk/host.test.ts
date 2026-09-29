@@ -1,5 +1,5 @@
 import { afterEach, expect, mock, test } from 'bun:test'
-import { exitFullscreen, getFullscreen, onFullscreenChange, requestFullscreen } from './host'
+import { exitFullscreen, getFullscreen, getHostNetwork, onFullscreenChange, requestFullscreen } from './host'
 
 const originalWindow = globalThis.window
 
@@ -44,4 +44,15 @@ test('fullscreen helpers report an unavailable host', async () => {
   await expect(exitFullscreen()).rejects.toThrow('unavailable')
   await expect(getFullscreen()).rejects.toThrow('unavailable')
   expect(() => onFullscreenChange(() => {})).toThrow('unavailable')
+})
+
+test('getHostNetwork reads the host network', () => {
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: { nimiqPay: { network: 'testnet' } },
+  })
+  expect(getHostNetwork()).toBe('testnet')
+
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: {} })
+  expect(getHostNetwork()).toBeUndefined()
 })

@@ -5,3 +5,6 @@ export enum Fiat {
   CRC = 'CRC',
   GMD = 'GMD',
 }
+
+/** Nimiq network Nimiq Pay is connected to. */
+export type Network = 'mainnet' | 'testnet'

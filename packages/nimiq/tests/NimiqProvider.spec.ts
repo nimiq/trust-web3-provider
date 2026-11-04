@@ -65,6 +65,41 @@ function registerErrorHandler(provider: NimiqProvider): void {
   }).registerProvider(provider);
 }
 
+describe('updateAccounts', () => {
+  test('replaces cached accounts and stays connected', async () => {
+    const provider = new NimiqProvider();
+    let hostCalls = 0;
+    new Web3Provider({
+      strategy: 'PROMISES',
+      handler: () => {
+        hostCalls++;
+        return Promise.resolve([account]);
+      },
+    }).registerProvider(provider);
+    await provider.listAccounts();
+
+    const changed: string[][] = [];
+    let disconnected = false;
+    provider.on('accountsChanged', (accounts: string[]) => changed.push(accounts));
+    provider.on('disconnect', () => {
+      disconnected = true;
+    });
+    provider.updateAccounts([account, 'NQ22 HTLC']);
+
+    expect(await provider.listAccounts()).toEqual([account, 'NQ22 HTLC']);
+    expect(hostCalls).toBe(1);
+    expect(changed).toEqual([[account, 'NQ22 HTLC']]);
+    expect(provider.connected).toBe(true);
+    expect(disconnected).toBe(false);
+  });
+
+  test('does not connect a provider that never listed accounts', () => {
+    const provider = new NimiqProvider();
+    provider.updateAccounts([account]);
+    expect(provider.connected).toBe(false);
+  });
+});
+
 describe('wallet errors', () => {
   test('preserves resolved errors without connecting or caching failures', async () => {
     const provider = new NimiqProvider();

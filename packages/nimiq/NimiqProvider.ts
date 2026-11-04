@@ -87,6 +87,17 @@ export class NimiqProvider
     this.emit('disconnect');
   }
 
+  /**
+   * Host replaced the approved accounts, e.g. with a new HTLC address.
+   * Unlike disconnect(), this keeps the connection and needs no new approval.
+   */
+  updateAccounts(accounts: string[]) {
+    if (this.#accounts) {
+      this.#accounts = accounts;
+    }
+    this.emit('accountsChanged', accounts);
+  }
+
   getNetwork(): string {
     return NimiqProvider.NETWORK;
   }

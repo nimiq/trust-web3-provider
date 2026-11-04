@@ -109,6 +109,40 @@ this method. Mini Apps that support older host versions can check
 `typeof window.nimiq?.getBalance === 'function'` before calling it and ask the
 user to update Nimiq Pay when it is unavailable.
 
+## Wallet balance
+
+Nimiq Pay always holds a user's spendable NIM in an HTLC shared with the Nimiq Pay
+cosigner. Every payment needs a signature from both the user and the cosigner,
+which is what gives Nimiq Pay payments instant settlement and finality. The wallet
+address only holds incoming NIM until Nimiq Pay moves it into the HTLC, so it
+usually reads `0`.
+
+`listAccounts()` returns the wallet address first, followed by the address of the
+current HTLC if the wallet has one.
+
+```ts
+const [walletAddress, htlcAddress] = await nimiq.listAccounts()
+const balance = htlcAddress ? await nimiq.getBalance(htlcAddress) : 0
+```
+
+The HTLC times out after 14 days, so Nimiq Pay replaces it once it is about 7 days
+old. It also replaces it when topping up the balance with newly received NIM. Each
+replacement has a new address. Nimiq Pay updates the list without another approval,
+so `listAccounts()` returns the current addresses and the provider emits
+`accountsChanged`. Read the balance again when it fires:
+
+```ts
+nimiq.on('accountsChanged', async ([walletAddress, htlcAddress]) => {
+  const balance = htlcAddress ? await nimiq.getBalance(htlcAddress) : 0
+})
+```
+
+During a replacement the old HTLC address can read `0` for a moment while the user
+still has funds, so do not refuse a payment based on that result alone.
+
+See the [Nimiq Provider API](https://nimiq.dev/mini-apps/api-reference/nimiq-provider#wallet-balance)
+for details.
+
 ## Host context
 
 Nimiq Pay seeds the user's selected language and fiat currency, plus the

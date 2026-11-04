@@ -20,6 +20,18 @@ afterEach(() => {
 });
 
 describe('init', () => {
+  test('delivers accountsChanged through the wrapper', async () => {
+    const provider = new HostProvider();
+    window.nimiq = provider;
+    const sdk = await init();
+    const changes: string[][] = [];
+
+    expect(sdk.on('accountsChanged', accounts => changes.push(accounts))).toBe(sdk);
+    provider.updateAccounts(['NQ11 WALLET', 'NQ22 HTLC']);
+
+    expect(changes).toEqual([['NQ11 WALLET', 'NQ22 HTLC']]);
+  });
+
   test('preserves callback-shaped results from non-wallet RPC requests', async () => {
     const response = { code: 7, message: 'Success' };
     const fakeProvider = {

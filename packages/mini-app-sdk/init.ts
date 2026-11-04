@@ -13,6 +13,11 @@ export interface NimiqProvider extends HostProvider {
   sendUpdateStakerTransaction(...args: Parameters<HostProvider['sendUpdateStakerTransaction']>): Promise<string>
   sendRetireStakeTransaction(...args: Parameters<HostProvider['sendRetireStakeTransaction']>): Promise<string>
   sendRemoveStakeTransaction(...args: Parameters<HostProvider['sendRemoveStakeTransaction']>): Promise<string>
+  /** `accountsChanged` fires when the host replaces the approved accounts, e.g. with a new HTLC address. */
+  on(event: 'accountsChanged', listener: (accounts: string[]) => void): this
+  on(event: string | symbol, listener: (...args: any[]) => void): this
+  once(event: 'accountsChanged', listener: (accounts: string[]) => void): this
+  once(event: string | symbol, listener: (...args: any[]) => void): this
 }
 
 export interface InitOptions {

@@ -90,6 +90,7 @@ export class NimiqProvider
   /**
    * Host replaced the approved accounts, e.g. with a new HTLC address.
    * Unlike disconnect(), this keeps the connection and needs no new approval.
+   * For hosts only. Mini Apps listen for `accountsChanged` instead.
    */
   updateAccounts(accounts: string[]) {
     if (this.#accounts) {

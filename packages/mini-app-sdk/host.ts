@@ -28,6 +28,15 @@ export function getHostNetwork(): Network | undefined {
 }
 
 /**
+ * Version of the running Nimiq Pay app, including OTA updates (e.g. "2.24.1"),
+ * or `undefined` when not running inside Nimiq Pay or on a host version that
+ * predates this field. Seeded synchronously before the Mini App's page script runs.
+ */
+export function getHostVersion(): string | undefined {
+  return typeof window === 'undefined' ? undefined : window.nimiqPay?.version
+}
+
+/**
  * Request a pseudonymous, per-origin device identifier from Nimiq Pay.
  * Resolves with a 64-char hex SHA-256 string scoped to the Mini App's origin.
  * The identifier is stable across Nimiq Pay reinstalls and across different

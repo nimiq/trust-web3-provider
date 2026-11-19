@@ -1,5 +1,5 @@
 import { afterEach, expect, mock, test } from 'bun:test'
-import { exitFullscreen, getFullscreen, getHostNetwork, onFullscreenChange, requestFullscreen } from './host'
+import { exitFullscreen, getFullscreen, getHostNetwork, getHostVersion, onFullscreenChange, requestFullscreen } from './host'
 
 const originalWindow = globalThis.window
 
@@ -55,4 +55,15 @@ test('getHostNetwork reads the host network', () => {
 
   Object.defineProperty(globalThis, 'window', { configurable: true, value: {} })
   expect(getHostNetwork()).toBeUndefined()
+})
+
+test('getHostVersion reads the host version', () => {
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: { nimiqPay: { version: '2.24.1' } },
+  })
+  expect(getHostVersion()).toBe('2.24.1')
+
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: {} })
+  expect(getHostVersion()).toBeUndefined()
 })

@@ -6,6 +6,8 @@ export interface NimiqPayHostContext {
   readonly language?: string
   readonly userFiat?: Fiat
   readonly network?: Network
+  /** Version of the running Nimiq Pay app, including OTA updates (e.g. "2.24.1"). */
+  readonly version?: string
   /** Enter native fullscreen. The Mini App must ask the user first. */
   requestFullscreen: () => Promise<void>
   exitFullscreen: () => Promise<void>
